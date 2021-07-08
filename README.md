@@ -126,7 +126,7 @@ Siempre se puede mejorar la calidad de nuestro codigo, y para eso hay reglas que
 
 ### Mantener los componentes lo mas chico posible
 La idea es bastante simple, cada componente deberia ocuparse de 1 sola tarea, aunque sea tedioso al principio, a la hora de mantener la aplicacion ahorrara horas de debugs y dolores de cabeza.
-Los componentes como maximo deberian tener 250 lineas. si estamos hablando de un componente que realiza muchas tareas, o tiene bastante logica, la cual deberiamos buscar formas de reducir a toda costa.
+Los componentes como **maximo** deberian tener 150 lineas. si estamos hablando de un componente que realiza muchas tareas, o tiene bastante logica, la cual deberiamos buscar formas de reducir a toda costa.
 Para lograr esto deberiamos: 
 
  1. Crear componentes hijos intentando separar cada pequeña parte del componente.
@@ -177,8 +177,10 @@ O si no es posible ya que contiene 2+ elementos y react nos tira error, podemos 
  Otro caso en el que podemos usar comentarios es para separar el codigo, por ejemplo si tenemos un componente que tiene estado, y handlers podemos hacer un comentario //State y //Handlers
 
   ### No usar el index como key en un map al renderizar un componente
-  Esto puede provocar bugs a la hora de renderizar, en vez de esto, intentar utilizar propiedades del elemento a mapear o como ultimo recurso, si no hay ningun valor que no se repita entre nuestro arreglo, usar *react-uuid* https://www.npmjs.com/package/uuid
+  Esto puede provocar bugs a la hora de renderizar, en vez de esto, intentar utilizar propiedades del elemento a mapear o como ultimo recurso, si no hay ningun valor que no se repita entre nuestro arreglo, usar *nanoid* https://github.com/ai/nanoid/
   
+  ### No crear 2+ componentes en el mismo archivo
+  A veces es tentador al crear un componente que esta muy relacionado con otro, en el mismo archivo, mas cuando son compones no tan grandes. Pero esto es una muy mala practica ya que dificulta la lectura del archivo.  Igual que con por ejemplo una constante con data dummy, etc, tratemos de enviarlas a archivos aparte.
   
  ### Usar bien los operadores ternarios y renderizado condicional en react
 
@@ -237,7 +239,8 @@ Una ultima cosa para remarcar es que por default las funciones render-props son 
     
     }
 
- 
+  ### Eliminar variables que no se usan!
+  Aqui no hay mucho que explicar, antes de un commit, cualquier variable / funcion /etc que no se use debe ser eliminada. 
  ### Usar destructuracion
  
 En vez de:
@@ -305,8 +308,16 @@ A esto
     
  ### Usar siempre formateadores de codigo
 Este paso tambien es importante que configuremos un formateador de codigo y se use una unica configuracion por proyecto y si es posible mantenerla entre proyectos, para esto podemos usar Prettier para VisualStudioCode, esto nos ayudara a no tener que preocuparnos por la identacion, espaciado ni nada por el estilo, simplemente le damos a formatear y listo! pero es importante no commitear ningun archivo sin formatear para mantener la coherencia visual del codigo.
- 
 
+ ### Usar async await en vez de .then.catch
+ Async Await es una forma moderna y mucho mejor de escribir bloques de promesas, que evita tener que estar concatenando bloques de then catch.
+  ### Si hay muchos useState, considerar usar useReducer!
+  Si vemos que hay mas de 4 - 5 useState, ver si se puede extrapolar a un reducer.
+ 
+### Mas buenas practicas:
+https://gist.github.com/cdiggins/338a6c31b43f5d88a73bd2aafb4204fb
+https://www.bigbinary.com/react-best-practices
+https://alexkondov.com/tao-of-react/
 
     
 
