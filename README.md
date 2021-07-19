@@ -319,32 +319,181 @@ https://gist.github.com/cdiggins/338a6c31b43f5d88a73bd2aafb4204fb
 https://www.bigbinary.com/react-best-practices
 https://alexkondov.com/tao-of-react/
 
-    
 
 # Librerias y convenciones para los proyectos
 
 Es importante mantener un stack de librerias que solventan problemas comunes a la mayoria de aplicaciones que sean consistentes y reusables, esto ayudara a la hora de transladarse de aplicaciones y transferir el conocimento de una app a otra.
 
-**Requests**:
+* **Requests**:
 axios https://www.npmjs.com/package/axios
-**Formularios**: 
+* **Formularios**: 
 react-hook-form https://react-hook-form.com
-**Validacion de Formulario**: 
+* **Validacion de Formulario**: 
 yup https://github.com/jquense/yup
-**Rutas**
+* **Rutas**
 react-router https://reactrouter.com/web/guides/quick-start
-**Estado Global**
+* **Estado Global**
 redux
 https://es.redux.js.org
-**Sistema de Grilla**
+* **Sistema de Grilla**
 bootstrap
 https://getbootstrap.com/docs/5.0/getting-started/introduction/
-**Material Design Components**
+* **Material Design Components**
 material-ui
 https://material-ui.com
-**Basic Components**
+* **Basic Components**
 prime-react
 https://www.primefaces.org/primereact/showcase/#/
-**Dates**
+* **Dates**
 date-fns
 https://date-fns.org
+
+
+
+## Tablas
+
+Las tablas son una parte importante en los proyectos de Gearthlogic, y como todo en programacion, se pueden armar de muchas maneras distintas, ninguna es estrictamente peor que la otra, lo malo viene cuando se empiezan a usar todas las maneras distintas en cada proyecto o inclusive dentro de un mismo proyecto.
+Para solucionar esto armamos una estructura para construir tablas que cumple todos los requerimientos y restricciones que se nos presentan al tener distintos proyectos, y distintas estructuras al rededor de estos componentes.
+### Estructura: 
+Componente Principal
+* La tabla debe estar completamente separada en componentes, los filtros por un lado, la tabla y la paginacion por otro lado, asi como cualquier componente que se pueda extrapolar.
+* Toda la logica que tenga que ver o que afecte a la tabla debe estar controlada por un hook local llamado useTable.
+* Mantenerlo lo mas simple posible.
+
+Ejemplo:
+
+	
+
+	    import  React  from  'react';
+	    
+	    import  Table  from  './Table';
+	    import  Filters  from  './Filters';
+	    import  Paginate  from  './Paginate'
+	    import  useTable  from  './useTable';
+    
+	    const  ClientRankingReport  = () => {
+    
+	    const { 
+	     filteredData,
+	     isLoading,
+	     isError,
+	     setFilters,
+	     totalPaginate,
+	     setCurrentPage,
+	     currentPage } =  useTable()
+  
+	    if (!filteredData  ||  isLoading  ||  isError) return  <></>;
+    
+      
+	    return (
+		    <div  className='container p-3'>
+			    <Filters setFilters={setFilters}  />
+			    <Table tableData={filteredData}  />
+			    <Paginate  
+				    total={totalPaginate}  
+				    onPaginate={setCurrentPage}  
+				    currentPage={currentPage}  />
+		    </div>
+		    );
+    
+	    };
+    
+      
+    
+	   export  default  ClientRankingReport;
+
+
+
+
+Tabla: 
+Se tiene en cuenta, que la tabla, su formato y estilo puede cambiar dependiendo del proyecto, la tabla en la que se trabaja, las librerias usadas y demases, pero en cualquiera de estos casos el componente de la tabla deberia tener su propio archivo y componente.
+La consideracion que debemos tener al crear la tabla, es que la prop **tableData** debe estar presente, y debe ser la informacion inmutable y final usada para mostrar nuestros datos. Si necesitamos hacer algun cambio, no tocaremos directamente esta varable en ninguna parte del circuito de  los componentes, luego veremos donde podemos agregar las mutaciones.
+* La data es final, no se modifica
+* La data debe mapearse en TableRows
+
+Ejemplo: 
+
+    import  React  from  'react';
+    import { Table } from  'reactstrap';
+    import  TableRow  from  './TableRow';
+    
+    const  ReportTable  = ({ tableData }) => {
+	    return (
+		    <div  className='table-container'>
+			    <Table>
+				    <thead>
+					    <tr>
+						    <th>Posición</th>
+						    <th>Capital total</th>
+						    <th>Cantidad de inversiones</th>
+						    <th>Nombre completo</th>
+						    <th>Email</th>
+						    <th>Telefono</th>
+					    </tr>
+				    </thead>
+				    <tbody>
+					    {tableData?.length > 0  && 
+					    tableData.map(data  =>  <TableRow key={data.person_id  +  data.quantity  +  data.capital}  data={data}  />)}
+				    </tbody>
+			    </Table>
+		    </div>
+	    );
+    };
+    
+      
+    
+    export  default  ReportTable;
+
+
+Table Row
+
+Este sera el componente que mostrara una fila de la tabla, al igual que con la tabla, la data no se debe modificar. 
+Ejemplo:
+
+    import  React  from  'react';
+    
+    const  TableRow  = ({ data }) => {
+	    return (
+		    <tr>
+			    <td>{data.posc}</td>
+			    <td>{data.capital}</td>
+			    <td>{data.quantity}</td>
+			    <td>{data.fullname}</td>
+			    <td>{data.email}</td>
+			    <td>{data.phone}</td>
+		    </tr>
+	    );
+    };
+    
+    export  default  TableRow;
+
+
+Filtros
+Los filtros varian mucho acorde al proyecto, pero la idea general es que solamente se le pase un seter como prop y que el componente maneje todo el formulario para que cuando este valido, se llame al seter, que es manejado por el useTable. Tambien es sugerido usar react-hook-form para el formulario del filtro ya que simplifica el proceso de validacion del componente. Aplicar todas las tecnicas antes mencionadas para acortar el componente.
+
+useTable
+Este hook es el corazon de nuestra logica de tablas, se armara uno por cada tabla que manejemos, aqui estaran todos los estados, efectos y llamadas a api relacionadas con nuestra tabla, para hacer estas tareas tenemos una estructura general que debemos seguir:
+La llamada a la api debera realizarse con el hook de useFetch, que nos ayudara a mantener la logica de la llamada simple.
+El servicio a llamar es uno de los 2 lugares donde realmente se mutara la informacion de la tabla. Mas adelante veremos de donde viene y como esta armada tableService, pero la idea es que nos devuelve la data ya formateada y lista para usar en el sistema. 
+tableDataExtractionStrategy simplemente nos devuelve la data como viene:
+
+    const  tableDataExtractionStrategy  =  data  =>  data;
+ 
+    const [{ data, isLoading, isError }] = useFetch(tableService, [], tableDataExtractionStrategy);
+
+
+La proxima parte principal de nuestro useTable es el useEffect que controlara todos las distintas partes de nuestra tabla, y mutara la informacion de nuestra tabla.
+
+
+    useEffect(() => {
+	    if (data) {
+		    const filtered = filterData(data, filters);
+		    const { paginatedData, totalPaginate } =  paginateData(filtered, currentPage, 100);
+		    setTotalPaginate(totalPaginate);
+		    setFilteredData(paginatedData);
+	    }
+    
+    }, [data, filters, currentPage]);
+
+Como vemos, este efecto cambiara solo si cambian los filtros, la informacion que viene de nuestra llamada (data), o la pagina de la paginacion en la que nos encontramos.
+Aqui es donde manipularemos entre todos nuestros estados y funciones la informacion que debe salir lista para usar a la tabla (filteredData).
