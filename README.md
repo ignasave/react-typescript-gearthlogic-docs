@@ -497,3 +497,90 @@ La proxima parte principal de nuestro useTable es el useEffect que controlara to
 
 Como vemos, este efecto cambiara solo si cambian los filtros, la informacion que viene de nuestra llamada (data), o la pagina de la paginacion en la que nos encontramos.
 Aqui es donde manipularemos entre todos nuestros estados y funciones la informacion que debe salir lista para usar a la tabla (filteredData).
+Si observamos bien, aqui usamos metodos como filterData, tableService, tableDataExtractionStrategy, paginateData, etc. De donde viene todo esto?
+Esto lo definiremos en el segundo archivo principal de las tablas:
+
+
+dataStructure
+Aqui sera donde definiremos el servicio, formateo de la informacion que viene del backend, la funcion para filtrar la informacion, y logica de paginado si es necesaria.
+Ejemplo:
+
+    import { getCountries } from  '../../services/api';
+    import { getRankingClients } from  '../../services/api/reports';
+    import { parseTableResponse } from  '../../services/tables';
+    
+    const  formatData  =  data  => {
+	    return {
+		    capital: data.capital,
+		    quantity: data.quantity,
+		    person_id: data.person_id,
+		    fullname: data.fullname,
+		    email: data.email,
+		    phone: data.phone,
+		    country_id: data.country_id,
+		    seller_id: data.seller_id,
+		    is_regulated: data.is_regulated,
+	    };
+    };
+    
+    const  formatCountry  =  data  => {
+	    return {
+		    id: data.id,
+		    name: data.name,
+		    iso_code: data.iso_code,
+	    };
+    };
+    
+    export  const  filterData  = (data, filters) => {
+	    let  fullnameFiltered  = [...data];
+	    if (filters.fullname) {
+		    fullnameFiltered  =  fullnameFiltered.filter(data  =>  data.fullname.toLowerCase().includes(filters.fullname.toLowerCase()));
+	    }
+	    let  min_capitalFiltered  =  fullnameFiltered;
+	    if (filters.min_capital) {
+		    min_capitalFiltered  =  min_capitalFiltered.filter(data  =>  data.capital >= filters.min_capital);
+	    }
+	    let  telephoneFiltered  =  min_capitalFiltered;
+	    if (filters.phone) {
+		    telephoneFiltered  =  telephoneFiltered.filter(data  =>  data.phone.toLowerCase().includes(filters.phone.toLowerCase()));
+	    }
+	    let  emailFitlered  =  telephoneFiltered;
+	    if (filters.email) {
+		    emailFitlered  =  emailFitlered.filter(data  =>  data.email.toLowerCase().includes(filters.email.toLowerCase()));
+	    }
+	    let  countryFiltered  =  emailFitlered;
+	    if (filters.country_id  &&  filters.country_id  !==  '-1') {
+		    countryFiltered  =  countryFiltered.filter(data  =>  String(data.country_id) ===  filters.country_id);
+	    }
+	    return  countryFiltered;
+    };
+    
+      
+    export  const  paginateData  = (data, currentPage, pageSize) => {
+	    const  paginatedData  =  data.slice((currentPage  -  1) *  pageSize, currentPage  *  pageSize);
+	    const  totalPaginate  =  Math.ceil(data.length  /  pageSize);
+	    return { paginatedData, totalPaginate };
+    };
+    
+      
+    
+    export  const  tableService  =  async () => {
+    
+	    const { data: { seller } } =  await  getRankingClients();
+	    const { data: { countries } } =  await  getCountries();
+	    
+	    const  formatedData  = parseTableResponse(formatData, seller);
+	    const  formatedCountries  = parseTableResponse(formatCountry, countries);
+	    const  extraDataAdded  =  formatedData.map((data, index) => ({
+		    ...data,
+		    posc: index  +  1,
+		    countryName: formatedCountries.find(country  =>  country.id  ===  data.country_id)?.name,
+	    }));
+    
+	    return  extraDataAdded;
+    
+    };
+
+Como ya comentamos, la data debe salir del servicio formateada para su uso dentro de la app, aunque no transformermos los nombres, este paso es necesario ya que es muy comun que se hagan cambios tanto en el front como en el back de las apps, y esto provoca tener que estar cambiando todo el circuito, en este caso solo cambiariamos formatData o formatCountry!
+Esto puede variar segun las necesidades de la app, si no se puede tener la data final en el servicio, el unico otro lugar donde se puede transformar es en el useEffect del useTable.
+Tambien aqui estan las funciones de filtro y paginacion, para mantener toda la logica en un solo lugar.
